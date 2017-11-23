@@ -11,6 +11,7 @@ using System.Web.Http.Description;
 using EFBookService.Models;
 using Common.Logging;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace EFBookService.Controllers
 {
@@ -20,26 +21,43 @@ namespace EFBookService.Controllers
         private static readonly ILog log = LogManager.GetCurrentClassLogger();
 
         // GET: api/Books
-        public IQueryable<Book> GetBooks()
+        public IQueryable<BookDTO> GetBooks()
         {
+            //Debug.WriteLine("lannaGetBooks");
+            //Trace.WriteLine("lannaGetBooks");
+
             //var books = db.Books.ToList();  // Does not load authors
             //var author = books[0].Author;   // Loads the author for books[0]
             //return books;
 
+            //db.Database.Log = message => log.Debug(message);
+            //return db.Books
+            //    .Include(b => b.Author); // Eager Loading get author data
 
-            db.Database.Log = message => log.Debug(message);
-            Debug.WriteLine("lannaGetBooks");
-            Trace.WriteLine("lannaGetBooks");
-
-            return db.Books
-                .Include(b => b.Author); // Eager Loading get author data
+            var books = from b in db.Books
+                        select new BookDTO()
+                        {
+                            Id = b.Id,
+                            Title = b.Title,
+                            AuthorName = b.AuthorName
+                        };
+            return books;
         }
 
         // GET: api/Books/5
-        [ResponseType(typeof(Book))]
-        public IHttpActionResult GetBook(int id)
+        [ResponseType(typeof(BookDetailDTO))]
+        public async Task<IHttpActionResult> GetBook(int id)
         {
-            Book book = db.Books.Find(id);
+            var book = await db.Books.Include(b => b.Author)
+                .Select(b => new BookDetailDTO()
+                {
+                    Id = b.Id,
+                    Title = b.Title,
+                    Year = b.Year,
+                    Price = b.Price,
+                    AuthorName = b.Author.Name,
+                    Genre = b.Genre
+                }).SingleOrDefaultAsync(b => b.Id == id);
             if (book == null)
             {
                 return NotFound();
