@@ -103,7 +103,7 @@ namespace EFBookService.Controllers
 
         // POST: api/Books
         [ResponseType(typeof(Book))]
-        public IHttpActionResult PostBook(Book book)
+        public async Task<IHttpActionResult> PostBook(Book book)
         {
             if (!ModelState.IsValid)
             {
@@ -112,8 +112,19 @@ namespace EFBookService.Controllers
 
             db.Books.Add(book);
             db.SaveChanges();
+            //await db.SaveChangesAsync();
+            
+            // Load author name
+            db.Entry(book).Reference(x => x.Author).Load();
 
-            return CreatedAtRoute("DefaultApi", new { id = book.Id }, book);
+            var dto = new BookDTO()
+            {
+                Id = book.Id,
+                Title = book.Title,
+                AuthorName = book.Author.Name
+            };
+
+            return CreatedAtRoute("DefaultApi", new { id = book.Id }, dto);
         }
 
         // DELETE: api/Books/5
