@@ -9,6 +9,7 @@ namespace MediacorpSpellingGame_Server.Models
     {
         public int Id { get; set; }
 
+        public int QuestionId { get; set; }
         public string[] Answers { get; set; }
         public int Score { get; set; }
         public int ElapsedTime { get; set; }
